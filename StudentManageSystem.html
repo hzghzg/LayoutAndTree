@@ -1,0 +1,242 @@
+<html>
+
+<head>
+    <link rel="stylesheet" type="text/css" href="./resources/css/ext-all.css" />
+    <script type="text/javascript" src="./adapter/ext/ext-base.js"></script>
+    <script type="text/javascript" src="ext-all.js"></script>
+    <style>
+        .x-panel-body{
+            border-bottom:0px
+        }
+    </style>
+    <script>
+        Ext.onReady(function () {
+                var currentClickStyle='';
+                var currentClickNode={};
+                //点击不同类型节点触发不同行为
+                var clickRoot= {
+                    'click':function(node){
+                        currentClickStyle='root';
+                        currentClickNode=node;
+                    }
+                };
+                var clickStudent= {
+                    'click':function(node){
+                        currentClickStyle='student';
+                        currentClickNode=node;
+                    }
+                };
+                var clickClass= {
+                    'click':function(node){
+                        currentClickStyle='class';
+                        currentClickNode=node;
+                    }
+                };
+                //输入框添加学生
+                var addNewStudent = {
+                    click: function () {
+                        if(currentClickStyle!='student'&&currentClickStyle!='class')
+                        Ext.Msg.alert('请先选择班级或学生！');
+                        else{
+                            if (Ext.getCmp('addstudent').getValue() != false) {
+                                var name = Ext.getCmp('addstudent').getValue();
+                                var newStudent = new Ext.tree.TreeNode({ text: name, id: name, listeners: clickStudent });
+                                switch (currentClickStyle) {
+                                    case 'student':
+                                        currentClickNode.parentNode.appendChild(newStudent);
+                                        Ext.Msg.alert('添加学生成功！');
+                                        break;
+                                    case 'class':
+                                        currentClickNode.appendChild(newStudent);
+                                        Ext.Msg.alert('添加学生成功！');
+                                        break;
+                                }
+                            }
+                        }
+                    }
+                };
+                //输入框添加班级
+                var addNewClass = {
+                    click: function () {
+                        if(currentClickStyle!='class'&&currentClickStyle!='root')
+                        Ext.Msg.alert('请先选择班级或根目录！');
+                        else{
+                            if (Ext.getCmp('addclass').getValue() != false) {
+                                var name = Ext.getCmp('addclass').getValue();
+                                var newClass = new Ext.tree.TreeNode({ text: name, id: name, expandable: true, listeners: clickClass });
+                                switch (currentClickStyle) {
+                                    case 'class':
+                                        currentClickNode.parentNode.appendChild(newClass);
+                                        Ext.Msg.alert('添加班级成功！');
+                                        break;
+                                    case 'root':
+                                        currentClickNode.appendChild(newClass);
+                                        Ext.Msg.alert('添加班级成功！');
+                                        break;
+                                }
+                            }
+                        }
+                    }
+                };
+                //菜单添加学生和班级
+                var contextMenu = new Ext.menu.Menu({
+                    items: [{
+                        id: 'add node',
+                        text: 'Add'
+                    }],
+                    listeners: {
+                        itemclick: function (item) {
+                            switch (item.id) {
+                                case 'add node':
+                                    var currentNode = item.parentMenu.contextNode;
+                                    var newStudent = new Ext.tree.TreeNode({ text: 'newStudent' ,listeners: clickStudent});
+                                    var newClass = new Ext.tree.TreeNode({ text: 'newClass' ,expandable:true,listeners: clickClass});
+                                    if (currentNode.parentNode){
+                                        currentNode.appendChild(newStudent);
+                                        Ext.Msg.alert('请记得更改新添加学生的名字哦！');
+                                    }
+                                    else{
+                                        currentNode.appendChild(newClass);
+                                        Ext.Msg.alert('请记得更改新添加班级的名字哦！');
+                                    } 
+                                    break;
+                            }
+
+                        }
+                    }
+                });
+                //创建树
+                var tree = new Ext.tree.TreePanel({
+                    el: 'tree',
+                    id: 'Tree',
+                    enableDD: true,
+                    enableDrag: true,
+                    contextMenu: contextMenu,
+                    //添加menu
+                    listeners: {
+                        contextmenu: function (node, e) {
+                            node.select();
+                            var treeContextMenu = node.getOwnerTree().contextMenu;
+                            treeContextMenu.contextNode = node;
+                            if (node.childNodes.length != 0)
+                                treeContextMenu.showAt(e.getXY());
+                        }
+                    }
+                });
+                var root = new Ext.tree.TreeNode({
+                    text: "Student Information",
+                    expanded: true,
+                    listeners:clickRoot
+                });
+                tree.setRootNode(root);
+                tree.render();
+                //初始数据
+                var class1 = new Ext.tree.TreeNode({ text: 'class1', expanded: true,listeners: clickClass});
+                var student1 = new Ext.tree.TreeNode({ text: 'Ethan' ,listeners: clickStudent});
+                var student2 = new Ext.tree.TreeNode({ text: 'Alvar' ,listeners:clickStudent});
+                class1.appendChild(student1);
+                class1.appendChild(student2);
+                root.appendChild(class1);
+                var class2 = new Ext.tree.TreeNode({text: "class2",expanded: true});
+                var class2 = new Ext.tree.TreeNode({ text: 'class2', expanded: true,listeners: clickClass});
+                var student2 = new Ext.tree.TreeNode({ text: 'jerry',listeners: clickStudent});
+                root.appendChild(class2);
+                class2.appendChild(student2);
+                //设置树可编辑
+                var treeEditor = new Ext.tree.TreeEditor(tree, { allowBlank: false, completeOnEnter: true }, {
+                    listeners: {
+                        complete: function (editor, currVal, origVal) {
+                            if (currVal != origVal)
+                                Ext.Msg.alert('Change Alert', 'Information changed from ' + origVal + ' to ' + currVal);
+                        }
+                    }
+                });
+                //关键布局与功能
+                var panel=new Ext.Panel({
+                    id:'main',
+                    title:'信息管理系统',
+                    //第一层border布局
+                    layout:'border',
+                    items:[{
+                        id:'function model',
+                        region:'west',
+                        title:'功能模块',
+                        width:150,
+                        collapsible:true,
+                        //左边栏采用accordion布局
+                        layout:'accordion',
+                        layoutConfig:{
+                            titleCollapse:true,
+                            animate:true,
+                            activeOnTop:false
+                        },
+                        items:[{
+                            id:'model1',
+                            title:'班级与学生信息',
+                            listeners:{
+                                expand:function(){
+                                    Ext.getCmp('add information').show();
+                                }
+                            },
+                            items:[tree]
+                        }]
+                    },
+                    {
+                        id:'center',
+                        region:'center',
+                        layout:'border',
+                        items:[
+                            {
+                                region:'north',
+                                id:'add information',
+                                title:'添加信息',
+                                autoHeight :true,
+                                layout:'table',
+                                layoutConfig:{
+                                    columns:2
+                                },
+                                items:[
+                                    {
+                                        xtype:'textfield',
+                                        id:'addstudent'
+                                    },{
+                                        xtype:'button',
+                                        text:'添加学生',
+                                        width:40,
+                                        listeners:addNewStudent
+                                    },
+                                    {
+                                        xtype:'textfield',
+                                        id:'addclass'
+                                    },{
+                                        xtype:'button',
+                                        text:'添加班级',
+                                        width:40,
+                                        listeners:addNewClass
+                                    }
+                                ]
+                            },
+                            {
+                                region:'center'
+                            }
+                            ]
+                    }
+                    ]
+                })
+                //最外层用window包裹
+                var window= new Ext.Window({
+                width: 800,
+                height: 600,
+                layout: 'fit',
+                items: [panel]
+                });
+                window.show();
+            });
+    </script>
+</head>
+
+<body>
+    <div id='tree'></div>
+</body>
+
+</html>
