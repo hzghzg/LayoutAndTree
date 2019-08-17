@@ -8,11 +8,18 @@
         .x-panel-body{
             border-bottom:0px
         }
+        .x-panel-body-noheader, .x-panel-mc .x-panel-body {
+           border-top: 0px;
+        }
+        .x-border-layout-ct {
+           background-color:white;
+        }
     </style>
     <script>
         Ext.onReady(function () {
                 var currentClickStyle='';
                 var currentClickNode={};
+                var model1CollapseFlag=1;
                 //点击不同类型节点触发不同行为
                 var clickRoot= {
                     'click':function(node){
@@ -163,22 +170,45 @@
                         title:'功能模块',
                         width:150,
                         collapsible:true,
+                        listeners: {
+                            expand: function () {
+                                if(Ext.getCmp('function model').layout.activeItem.id=='model1'&&model1CollapseFlag==1)
+                                Ext.getCmp('add information').show();
+                            },
+                            collapse:function(){
+                                Ext.getCmp('add information').hide();
+                            }
+                        },
                         //左边栏采用accordion布局
                         layout:'accordion',
                         layoutConfig:{
                             titleCollapse:true,
                             animate:true,
-                            activeOnTop:false
+                            activeOnTop:true
                         },
                         items:[{
                             id:'model1',
                             title:'班级与学生信息',
-                            listeners:{
-                                expand:function(){
+                            listeners: {
+                                expand: function () {
                                     Ext.getCmp('add information').show();
+                                    model1CollapseFlag=1;
+                                },
+                                collapse: function () {
+                                    Ext.getCmp('add information').hide();
+                                    model1CollapseFlag=0;
                                 }
                             },
                             items:[tree]
+                        },{
+                            id:'model2',
+                            title:'其他功能',
+                            html:'该模块功能尚待开发',
+                            listeners: {
+                                expand: function () {
+                                    Ext.getCmp('add information').hide();
+                                }
+                            },
                         }]
                     },
                     {
@@ -225,8 +255,8 @@
                 })
                 //最外层用window包裹
                 var window= new Ext.Window({
-                width: 800,
-                height: 600,
+                width: 900,
+                height: 700,
                 layout: 'fit',
                 items: [panel]
                 });
